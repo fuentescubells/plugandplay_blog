@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
+import BlogHeader from "@/ui/header/header";
+import { LoaderProvider } from "@/shared/context/loader-context";
+import { GlobalLoader } from "@/ui/loader/global-loader";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +33,11 @@ export default function RootLayout({
       suppressHydrationWarning>
       <body>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          {children}
+          <LoaderProvider>
+            <GlobalLoader />
+            <BlogHeader/>
+            {children}
+          </LoaderProvider>
         </ThemeProvider>
       </body>
     </html>

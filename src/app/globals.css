@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
 
+@variant dark (&:where(.dark, .dark *));
+
 @theme inline {
   /* Colores de superficie */
   --color-bg:             var(--color-bg);
@@ -59,6 +61,10 @@
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
   --shadow-xl: var(--shadow-xl);
+}
+
+html {
+  overflow-x: hidden;
 }
 
 body {
