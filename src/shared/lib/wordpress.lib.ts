@@ -3,9 +3,16 @@ import { logger } from "../utils/logger";
 
 const wpUser = process.env.WP_USER;
 const wpPassword = process.env.WP_APP_PASSWORD;
+const apiUrl = process.env.WORDPRESS_API_URL;
+
+if (!apiUrl) {
+  throw new Error(
+    "[Config] WORDPRESS_API_URL no está definida. Revisa tu archivo .env.local"
+  );
+}
 
 export const wpApi = axios.create({
-  baseURL: process.env.WORDPRESS_API_URL + "/wp/v2",
+  baseURL: apiUrl + "/wp/v2",
   timeout: 8000,
   headers: {
     "Content-Type": "application/json",

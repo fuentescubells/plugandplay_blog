@@ -1,23 +1,43 @@
 import { logger } from "@/shared/utils/logger";
 import wpApi from "@/shared/lib/wordpress.lib";
 import { Post } from "../models/post.model";
+import { GRID_FIELDS } from "../constants/gridFields.constants";
 
-export async function fetchPosts(perPage: number = 16): Promise<Post[]> {
+
+export async function fetchPosts(perPage: number = 16): Promise<{ posts: Post[]; totalPages: number }> {
   try {
-    const { data } = await wpApi.get<Post[]>("/posts", {
-      params: { per_page: perPage, _fields: "id,slug,title,excerpt,featured_media,categories,tags,date" },
+    const { data, headers } = await wpApi.get<Post[]>("/posts", {
+      params: { per_page: perPage, _embed: true, _fields: GRID_FIELDS },
     });
-    return data;
+    const totalPages = parseInt(headers["x-wp-totalpages"] ?? "1", 10);
+    return { posts: data, totalPages };
   } catch (error) {
     logger.error("Error fetching posts:", error);
-    return [];
+    throw error;
+  }
+}
+
+export async function fetchPostsPaginated( page: number = 1, perPage: number = 12): Promise<{ posts: Post[]; totalPages: number }> {
+  try {
+    const { data, headers } = await wpApi.get<Post[]>("/posts", {
+      params: { page, per_page: perPage, _embed: true, _fields: GRID_FIELDS },
+    });
+    const totalPages = parseInt(headers["x-wp-totalpages"] ?? "1", 10);
+    return { posts: data, totalPages };
+  } catch (error) {
+    logger.error("Error fetching paginated posts:", error);
+    throw error;
   }
 }
 
 export async function fetchPostBySlug(slug: string): Promise<Post | null> {
   try {
     const { data } = await wpApi.get<Post[]>("/posts", {
-      params: { slug, _fields: "id,slug,title,content,excerpt,featured_media,categories,tags,date,modified" },
+      params: {
+        slug,
+        _embed: true,
+        _fields: "id,slug,title,content,excerpt,featured_media,categories,tags,date,modified,_links",
+      },
     });
     return data[0] ?? null;
   } catch (error) {
@@ -32,24 +52,36 @@ export async function fetchPostsByCategory(categoryId: number, perPage: number =
       params: {
         categories: categoryId,
         per_page: perPage,
-        _fields: "id,slug,title,excerpt,featured_media,categories,tags,date",
+        _embed: true,
+        _fields: GRID_FIELDS,
       },
     });
     return data;
   } catch (error) {
     logger.error(`Error fetching posts by category [${categoryId}]:`, error);
-    return [];
+    throw error;
   }
 }
 
-export async function searchPosts(query: string, perPage: number = 10): Promise<Post[]> {
+export async function fetchPostsByCategoryPaginated(
+  categoryId: number,
+  page: number = 1,
+  perPage: number = 12
+): Promise<{ posts: Post[]; totalPages: number }> {
   try {
-    const { data } = await wpApi.get<Post[]>("/posts", {
-      params: { search: query, per_page: perPage, _fields: "id,slug,title" },
+    const { data, headers } = await wpApi.get<Post[]>("/posts", {
+      params: {
+        categories: categoryId,
+        page,
+        per_page: perPage,
+        _embed: true,
+        _fields: GRID_FIELDS,
+      },
     });
-    return data;
+    const totalPages = parseInt(headers["x-wp-totalpages"] ?? "1", 10);
+    return { posts: data, totalPages };
   } catch (error) {
-    logger.error("Error searching posts:", error);
-    return [];
+    logger.error(`Error fetching paginated posts by category [${categoryId}]:`, error);
+    throw error;
   }
 }
